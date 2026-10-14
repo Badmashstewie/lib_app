@@ -1,0 +1,27 @@
+{
+  "background_color": "#ffffff",
+  "description": "Library Seat Allocation App",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "libraryseatallocator",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "libraryseatallocator",
+  "start_url": "/",
+  "theme_color": "#3730A3",
+  "icons": [
+    {
+      "src": "https://libraryseatallocator.netlify.app/favicon.ico",
+      "type": "image/x-icon",
+      "isSquare": false,
+      "isPng": false,
+      "isWebp": false,
+      "isJpg": false,
+      "width": 0,
+      "is512x512": false,
+      "is256x256": false,
+      "is192x192": false
+    }
+  ],
+  "id": "112214"
+}
