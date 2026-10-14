@@ -1,0 +1,1801 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#3730A3">
+  <meta name="description" content="Library Seat Allocation System - Library Code 66834">
+  <title>Library Seat Allocation • Code 66834</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            m3: {
+              primary: '#4338CA',
+              onPrimary: '#FFFFFF',
+              primaryContainer: '#E0E7FF',
+              onPrimaryContainer: '#1E1B4B',
+              surface: '#F8FAFC',
+              surfaceDim: '#EEF2F6',
+              surfaceContainer: '#FFFFFF',
+              surfaceContainerHigh: '#F1F5F9',
+              onSurface: '#0F172A',
+              onSurfaceVariant: '#475569',
+              outline: '#CBD5E1',
+              vacant: '#10B981',
+              vacantBg: '#ECFDF5',
+              occupied: '#6366F1',
+              occupiedBg: '#EEF2FF',
+              morning: '#F59E0B',
+              morningBg: '#FEF3C7',
+              evening: '#8B5CF6',
+              eveningBg: '#F3E8FF',
+              fullDay: '#3B82F6',
+              fullDayBg: '#EFF6FF'
+            }
+          },
+          fontFamily: {
+            sans: ['Roboto', 'Inter', 'system-ui', 'sans-serif'],
+          },
+          boxShadow: {
+            'm3-1': '0 1px 3px 1px rgba(0,0,0,0.08), 0 1px 2px 0 rgba(0,0,0,0.04)',
+            'm3-2': '0 2px 6px 2px rgba(0,0,0,0.10), 0 1px 2px 0 rgba(0,0,0,0.06)',
+            'm3-3': '0 4px 12px 3px rgba(0,0,0,0.12), 0 2px 6px 1px rgba(0,0,0,0.08)',
+            'm3-elevated': '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts: Roboto & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    /* Material 3 ripple & smooth touches */
+    * {
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    input, textarea, select {
+      user-select: text;
+    }
+    .scrollbar-none::-webkit-scrollbar {
+      display: none;
+    }
+    .scrollbar-none {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    /* Safe-area insets for notched devices */
+    body {
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    .sheet-transition {
+      transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.25s ease;
+    }
+    .fade-transition {
+      transition: opacity 0.2s ease, visibility 0.2s ease;
+    }
+  </style>
+</head>
+
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans min-h-screen flex flex-col antialiased selection:bg-indigo-200">
+
+  <!-- ==================== STICKY TOP APP BAR ==================== -->
+  <header class="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 shadow-sm transition-colors duration-200">
+    <div class="max-w-7xl mx-auto px-4 pt-3 pb-2.5">
+      <!-- Top Row: Title, Library Code Badge, Action Menu -->
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div class="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-md shadow-indigo-500/20 shrink-0">
+            <i data-lucide="library" class="w-5 h-5"></i>
+          </div>
+          <div class="min-w-0">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <h1 class="text-base sm:text-lg font-bold tracking-tight text-slate-900 dark:text-white truncate">Central Study Library</h1>
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800 dark:bg-indigo-900/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                Code: 66834
+              </span>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 truncate">Seat Allocation & Occupancy Management</p>
+          </div>
+        </div>
+
+        <!-- Header Actions: Export/Backup Menu & Add Seats Button -->
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button id="themeToggleBtn" aria-label="Toggle dark mode" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition active:scale-95">
+            <i data-lucide="moon" id="themeIcon" class="w-4 h-4"></i>
+          </button>
+
+          <!-- Export/Menu Dropdown Toggle -->
+          <div class="relative">
+            <button id="menuDropdownBtn" aria-label="Export and options" class="h-9 px-2.5 rounded-xl flex items-center gap-1.5 text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition active:scale-95">
+              <i data-lucide="download" class="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400"></i>
+              <span class="hidden sm:inline">Export / Data</span>
+              <i data-lucide="chevron-down" class="w-3 h-3 text-slate-400"></i>
+            </button>
+
+            <!-- Dropdown Menu -->
+            <div id="dataMenuDropdown" class="hidden absolute right-0 mt-1.5 w-56 rounded-2xl bg-white dark:bg-slate-800 shadow-xl border border-slate-200 dark:border-slate-700 py-1.5 z-40">
+              <div class="px-3 py-1.5 border-b border-slate-100 dark:border-slate-700/60">
+                <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Data Actions</p>
+              </div>
+              <button onclick="exportToCSV()" class="w-full text-left px-3.5 py-2 text-xs text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 flex items-center gap-2.5">
+                <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-600"></i>
+                <div>
+                  <div class="font-medium">Export to CSV</div>
+                  <div class="text-[10px] text-slate-400">Download spreadsheet report</div>
+                </div>
+              </button>
+              <button onclick="backupToJSON()" class="w-full text-left px-3.5 py-2 text-xs text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 flex items-center gap-2.5">
+                <i data-lucide="database" class="w-4 h-4 text-indigo-600"></i>
+                <div>
+                  <div class="font-medium">Backup Data (JSON)</div>
+                  <div class="text-[10px] text-slate-400">Save full library database</div>
+                </div>
+              </button>
+              <label class="w-full cursor-pointer text-left px-3.5 py-2 text-xs text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 flex items-center gap-2.5">
+                <i data-lucide="upload" class="w-4 h-4 text-sky-600"></i>
+                <div>
+                  <div class="font-medium">Restore Backup</div>
+                  <div class="text-[10px] text-slate-400">Import saved JSON file</div>
+                </div>
+                <input type="file" id="restoreFileInput" accept=".json" class="hidden" onchange="restoreFromJSON(event)">
+              </label>
+              <div class="my-1 border-t border-slate-100 dark:border-slate-700/60"></div>
+              <button onclick="resetToSampleData()" class="w-full text-left px-3.5 py-2 text-xs text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 flex items-center gap-2.5">
+                <i data-lucide="rotate-ccw" class="w-4 h-4 text-rose-500"></i>
+                <div>
+                  <div class="font-medium">Reset Demo Seats</div>
+                  <div class="text-[10px] text-slate-400">Reload initial Library 66834 data</div>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Add Seats Button -->
+          <button onclick="openAddSeatsModal()" class="h-9 px-3 rounded-xl flex items-center gap-1.5 text-xs font-semibold bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm shadow-indigo-600/30 transition active:scale-95">
+            <i data-lucide="plus" class="w-4 h-4"></i>
+            <span>Add Seats</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Live Stats Bar Strip -->
+      <div class="mt-3 grid grid-cols-3 gap-2">
+        <!-- Total Seats Card -->
+        <div class="bg-slate-100/80 dark:bg-slate-800/80 rounded-2xl p-2.5 flex items-center gap-2.5 border border-slate-200/60 dark:border-slate-700/50">
+          <div class="w-8 h-8 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center shrink-0">
+            <i data-lucide="layout-grid" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <div class="text-[11px] font-medium text-slate-500 dark:text-slate-400 leading-none">Total Seats</div>
+            <div class="text-base sm:text-lg font-bold text-slate-900 dark:text-white leading-tight" id="statTotal">0</div>
+          </div>
+        </div>
+
+        <!-- Available Seats Card -->
+        <div class="bg-emerald-50 dark:bg-emerald-950/40 rounded-2xl p-2.5 flex items-center gap-2.5 border border-emerald-200/60 dark:border-emerald-900/50">
+          <div class="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 flex items-center justify-center shrink-0">
+            <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <div class="text-[11px] font-medium text-emerald-700 dark:text-emerald-400 leading-none">Available</div>
+            <div class="text-base sm:text-lg font-bold text-emerald-800 dark:text-emerald-300 leading-tight" id="statAvailable">0</div>
+          </div>
+        </div>
+
+        <!-- Occupied Seats Card -->
+        <div class="bg-indigo-50 dark:bg-indigo-950/40 rounded-2xl p-2.5 flex items-center gap-2.5 border border-indigo-200/60 dark:border-indigo-900/50">
+          <div class="w-8 h-8 rounded-xl bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 flex items-center justify-center shrink-0">
+            <i data-lucide="user-check" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <div class="text-[11px] font-medium text-indigo-700 dark:text-indigo-400 leading-none">Occupied</div>
+            <div class="text-base sm:text-lg font-bold text-indigo-800 dark:text-indigo-300 leading-tight" id="statOccupied">0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Occupancy Progress Meter -->
+      <div class="mt-2.5 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 px-0.5">
+        <div class="flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
+          <span>Occupancy Rate: <strong id="statPercent" class="text-slate-800 dark:text-slate-200 font-bold">0%</strong></span>
+        </div>
+        <div id="statShiftBreakdown" class="hidden sm:flex items-center gap-2 text-[10px]">
+          <span class="text-amber-600 dark:text-amber-400">☀️ M: <span id="statMorningCount">0</span></span>
+          <span class="text-purple-600 dark:text-purple-400">🌙 E: <span id="statEveningCount">0</span></span>
+          <span class="text-blue-600 dark:text-blue-400">⏱️ F: <span id="statFullDayCount">0</span></span>
+        </div>
+      </div>
+      <div class="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden mt-1">
+        <div id="statProgressBar" class="bg-gradient-to-r from-emerald-500 via-indigo-500 to-indigo-600 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+      </div>
+
+      <!-- Search Bar -->
+      <div class="mt-3 relative">
+        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+          <i data-lucide="search" class="w-4 h-4"></i>
+        </div>
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Search by seat number (e.g. S-05) or student name..."
+          class="w-full pl-10 pr-9 py-2 bg-slate-100 dark:bg-slate-800/90 text-xs sm:text-sm rounded-xl border border-slate-200/90 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 dark:text-white transition placeholder:text-slate-400"
+          oninput="handleSearchInput(event)"
+        >
+        <button id="searchClearBtn" onclick="clearSearch()" class="hidden absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- Filter Chips (Horizontal Scrollable) -->
+      <div class="mt-2.5 flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
+        <button onclick="setFilter('all')" data-filter="all" class="filter-chip px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 bg-indigo-600 text-white shadow-sm shadow-indigo-500/20 active:scale-95">
+          <i data-lucide="check" class="w-3 h-3 chip-check"></i>
+          <span>All Seats</span>
+          <span class="text-[10px] opacity-90 font-mono ml-0.5 bg-white/20 px-1.5 py-0.2 rounded-full" id="filterCountAll">0</span>
+        </button>
+
+        <button onclick="setFilter('available')" data-filter="available" class="filter-chip px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95">
+          <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+          <span>Available</span>
+          <span class="text-[10px] opacity-80 font-mono ml-0.5 bg-slate-200 dark:bg-slate-700 px-1.5 py-0.2 rounded-full" id="filterCountAvailable">0</span>
+        </button>
+
+        <button onclick="setFilter('occupied')" data-filter="occupied" class="filter-chip px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95">
+          <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+          <span>Occupied</span>
+          <span class="text-[10px] opacity-80 font-mono ml-0.5 bg-slate-200 dark:bg-slate-700 px-1.5 py-0.2 rounded-full" id="filterCountOccupied">0</span>
+        </button>
+
+        <button onclick="setFilter('morning')" data-filter="morning" class="filter-chip px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95">
+          <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+          <span>Morning Shift</span>
+          <span class="text-[10px] opacity-80 font-mono ml-0.5 bg-slate-200 dark:bg-slate-700 px-1.5 py-0.2 rounded-full" id="filterCountMorning">0</span>
+        </button>
+
+        <button onclick="setFilter('evening')" data-filter="evening" class="filter-chip px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95">
+          <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+          <span>Evening Shift</span>
+          <span class="text-[10px] opacity-80 font-mono ml-0.5 bg-slate-200 dark:bg-slate-700 px-1.5 py-0.2 rounded-full" id="filterCountEvening">0</span>
+        </button>
+
+        <button onclick="setFilter('fullday')" data-filter="fullday" class="filter-chip px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95">
+          <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+          <span>Full Day</span>
+          <span class="text-[10px] opacity-80 font-mono ml-0.5 bg-slate-200 dark:bg-slate-700 px-1.5 py-0.2 rounded-full" id="filterCountFullDay">0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== MAIN CONTENT: SEAT GRID ==================== -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-4 sm:py-6">
+    <!-- Active Filter Indicator & Grid Meta Info -->
+    <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-3 px-0.5">
+      <div id="gridStatusText">Showing all seats</div>
+      <div class="flex items-center gap-2">
+        <span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Vacant</span>
+        <span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-indigo-500"></span> Occupied</span>
+      </div>
+    </div>
+
+    <!-- The Interactive Visual Seat Grid -->
+    <div id="seatsGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
+      <!-- Seat cards dynamically injected here -->
+    </div>
+
+    <!-- Empty State when filter or search has no matches -->
+    <div id="emptyState" class="hidden text-center py-16 px-4">
+      <div class="w-16 h-16 mx-auto rounded-3xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-500 flex items-center justify-center mb-3">
+        <i data-lucide="search-x" class="w-8 h-8"></i>
+      </div>
+      <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">No seats found</h3>
+      <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto mt-1" id="emptyStateDesc">
+        Try adjusting your search query or switching filters.
+      </p>
+      <button onclick="clearSearchAndFilters()" class="mt-4 px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 text-white hover:bg-indigo-700 transition active:scale-95 shadow-sm">
+        Reset Search & Filters
+      </button>
+    </div>
+  </main>
+
+  <!-- ==================== FLOATING ACTION BUTTON (FAB) ==================== -->
+  <div class="fixed bottom-6 right-6 z-20">
+    <button onclick="openAddSeatsModal()" class="w-14 h-14 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-m3-elevated hover:bg-indigo-700 transition active:scale-90 hover:scale-105 group" title="Add New Seat / Bulk Generate">
+      <i data-lucide="plus" class="w-7 h-7 transition-transform group-hover:rotate-90"></i>
+    </button>
+  </div>
+
+  <!-- ==================== MODAL: ADD SEATS (SINGLE & BULK) ==================== -->
+  <div id="addSeatsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm fade-transition opacity-0">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-200 dark:border-slate-800 transform transition-all scale-95 duration-200" id="addSeatsModalCard">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-indigo-100 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+            <i data-lucide="armchair" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-slate-900 dark:text-white">Add Seats</h3>
+            <p class="text-xs text-slate-500">Configure single seat or generate in bulk</p>
+          </div>
+        </div>
+        <button onclick="closeAddSeatsModal()" class="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- Mode Switcher Tabs -->
+      <div class="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl mt-4">
+        <button onclick="switchAddMode('single')" id="tabBtnSingle" class="flex-1 py-1.5 rounded-lg text-xs font-semibold bg-white dark:bg-slate-700 shadow-sm text-indigo-600 dark:text-white transition">
+          Single Seat
+        </button>
+        <button onclick="switchAddMode('bulk')" id="tabBtnBulk" class="flex-1 py-1.5 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 transition">
+          Bulk Generation
+        </button>
+      </div>
+
+      <!-- Form: Single Seat -->
+      <form id="singleSeatForm" onsubmit="handleSingleSeatSubmit(event)" class="mt-4 space-y-3.5">
+        <div>
+          <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Seat Number / Code *</label>
+          <input
+            type="text"
+            id="singleSeatNumber"
+            required
+            placeholder="e.g. S-31 or 31"
+            class="w-full px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+          >
+          <p class="text-[11px] text-slate-400 mt-1">Must be unique within Library 66834.</p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Section / Hall (Optional)</label>
+          <select id="singleSeatSection" class="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50">
+            <option value="Main Reading Hall">Main Reading Hall</option>
+            <option value="Silent Study Zone">Silent Study Zone</option>
+            <option value="AC Cubicle Section">AC Cubicle Section</option>
+            <option value="First Floor Wing">First Floor Wing</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Amenities</label>
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <label class="flex items-center gap-2 p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 cursor-pointer">
+              <input type="checkbox" id="singleSeatPlug" checked class="rounded text-indigo-600 focus:ring-indigo-500">
+              <span>Power Plug</span>
+            </label>
+            <label class="flex items-center gap-2 p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 cursor-pointer">
+              <input type="checkbox" id="singleSeatWindow" class="rounded text-indigo-600 focus:ring-indigo-500">
+              <span>Window Side</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="pt-2 flex items-center justify-end gap-2">
+          <button type="button" onclick="closeAddSeatsModal()" class="px-4 py-2 text-xs font-medium rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+            Cancel
+          </button>
+          <button type="submit" class="px-4 py-2 text-xs font-semibold rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm transition active:scale-95">
+            Add Seat
+          </button>
+        </div>
+      </form>
+
+      <!-- Form: Bulk Generation -->
+      <form id="bulkSeatForm" onsubmit="handleBulkSeatSubmit(event)" class="hidden mt-4 space-y-3.5">
+        <div class="grid grid-cols-3 gap-2">
+          <div>
+            <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Prefix</label>
+            <input
+              type="text"
+              id="bulkPrefix"
+              value="S-"
+              placeholder="e.g. S-"
+              class="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+              oninput="updateBulkPreview()"
+            >
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">From *</label>
+            <input
+              type="number"
+              id="bulkStart"
+              value="1"
+              min="1"
+              max="999"
+              required
+              class="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+              oninput="updateBulkPreview()"
+            >
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">To *</label>
+            <input
+              type="number"
+              id="bulkEnd"
+              value="30"
+              min="1"
+              max="999"
+              required
+              class="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+              oninput="updateBulkPreview()"
+            >
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Section Assignment</label>
+          <select id="bulkSection" class="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50">
+            <option value="Main Reading Hall">Main Reading Hall</option>
+            <option value="Silent Study Zone">Silent Study Zone</option>
+            <option value="AC Cubicle Section">AC Cubicle Section</option>
+            <option value="First Floor Wing">First Floor Wing</option>
+          </select>
+        </div>
+
+        <div class="p-3 bg-indigo-50/70 dark:bg-indigo-950/40 rounded-xl border border-indigo-100 dark:border-indigo-900/50 text-xs">
+          <div class="flex items-center gap-1.5 font-semibold text-indigo-900 dark:text-indigo-300">
+            <i data-lucide="info" class="w-3.5 h-3.5 text-indigo-600"></i>
+            <span>Bulk Summary</span>
+          </div>
+          <p class="text-slate-600 dark:text-slate-300 mt-1" id="bulkPreviewText">
+            Generates 30 seats: S-01, S-02, ..., S-30
+          </p>
+          <label class="flex items-center gap-2 mt-2 text-slate-600 dark:text-slate-400 cursor-pointer">
+            <input type="checkbox" id="bulkSkipExisting" checked class="rounded text-indigo-600 focus:ring-indigo-500">
+            <span class="text-[11px]">Skip seat numbers that already exist</span>
+          </label>
+        </div>
+
+        <div class="pt-2 flex items-center justify-end gap-2">
+          <button type="button" onclick="closeAddSeatsModal()" class="px-4 py-2 text-xs font-medium rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+            Cancel
+          </button>
+          <button type="submit" class="px-4 py-2 text-xs font-semibold rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm transition active:scale-95">
+            Generate Seats
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== SLIDE-UP BOTTOM SHEET ==================== -->
+  <div id="seatBottomSheetBackdrop" onclick="closeBottomSheet()" class="hidden fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-xs fade-transition opacity-0"></div>
+
+  <div id="seatBottomSheet" class="fixed inset-x-0 bottom-0 z-50 max-w-lg mx-auto bg-white dark:bg-slate-900 rounded-t-3xl shadow-2xl border-t border-slate-200 dark:border-slate-800 sheet-transition transform translate-y-full max-h-[92vh] flex flex-col">
+    <!-- Sheet Drag Handle Pill -->
+    <div class="pt-3 pb-1 flex justify-center cursor-pointer shrink-0" onclick="closeBottomSheet()">
+      <div class="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700"></div>
+    </div>
+
+    <!-- Sheet Header -->
+    <div class="px-5 py-3 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 shrink-0">
+      <div class="flex items-center gap-2.5">
+        <div id="sheetStatusBadgeIcon" class="w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-sm bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300">
+          <i data-lucide="check" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h2 id="sheetSeatTitle" class="text-lg font-bold text-slate-900 dark:text-white">Seat S-01</h2>
+            <span id="sheetStatusPill" class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+              Available
+            </span>
+          </div>
+          <p id="sheetSeatMeta" class="text-xs text-slate-500">Main Reading Hall • Power Plug</p>
+        </div>
+      </div>
+      <button onclick="closeBottomSheet()" class="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+
+    <!-- Sheet Scrollable Body -->
+    <div class="p-5 overflow-y-auto space-y-4 flex-1" id="sheetBody">
+      <!-- Dynamic Form (Vacant Mode) or Details (Occupied Mode) injected here -->
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: TRANSFER SEAT ==================== -->
+  <div id="transferModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm fade-transition opacity-0">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-sm w-full p-5 shadow-2xl border border-slate-200 dark:border-slate-800">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-indigo-100 dark:bg-indigo-950 text-indigo-600 flex items-center justify-center">
+            <i data-lucide="arrow-right-left" class="w-4 h-4"></i>
+          </div>
+          <h3 class="text-sm font-bold text-slate-900 dark:text-white">Transfer Seat</h3>
+        </div>
+        <button onclick="closeTransferModal()" class="w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="mt-4 space-y-3">
+        <p class="text-xs text-slate-600 dark:text-slate-300" id="transferPromptText">
+          Transfer occupant from current seat to an available seat:
+        </p>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Target Vacant Seat *</label>
+          <select id="targetVacantSeatSelect" class="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50">
+            <!-- Populated dynamically with available seats -->
+          </select>
+        </div>
+
+        <div class="pt-3 flex items-center justify-end gap-2">
+          <button onclick="closeTransferModal()" class="px-3.5 py-1.5 text-xs font-medium rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+            Cancel
+          </button>
+          <button onclick="confirmSeatTransfer()" class="px-4 py-1.5 text-xs font-semibold rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm transition active:scale-95">
+            Confirm Transfer
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: ALLOCATION RECEIPT SLIP ==================== -->
+  <div id="receiptModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm fade-transition opacity-0">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-sm w-full p-5 shadow-2xl border border-slate-200 dark:border-slate-800" id="receiptCard">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Library Allocation Slip</span>
+        <button onclick="closeReceiptModal()" class="w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- Receipt Content -->
+      <div class="mt-3 p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 text-center" id="receiptPrintArea">
+        <div class="w-10 h-10 rounded-2xl bg-indigo-600 text-white mx-auto flex items-center justify-center shadow-md">
+          <i data-lucide="library" class="w-5 h-5"></i>
+        </div>
+        <h4 class="text-sm font-bold text-slate-900 dark:text-white mt-2">Central Study Library</h4>
+        <p class="text-[11px] text-indigo-600 dark:text-indigo-400 font-semibold">Library Code: 66834</p>
+        <div class="my-2 border-t border-slate-200 dark:border-slate-700"></div>
+
+        <div class="text-2xl font-black text-indigo-700 dark:text-indigo-400 tracking-tight" id="receiptSeatNum">
+          SEAT S-01
+        </div>
+        <p class="text-xs text-slate-500 font-medium" id="receiptShift">Full Day Shift</p>
+
+        <div class="mt-3 text-left space-y-1.5 text-xs">
+          <div class="flex justify-between">
+            <span class="text-slate-400">Student:</span>
+            <span class="font-bold text-slate-800 dark:text-slate-100" id="receiptStudent">Rahul Sharma</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-400">Phone:</span>
+            <span class="font-medium text-slate-700 dark:text-slate-300" id="receiptPhone">+91 98765 43210</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-400">Valid From:</span>
+            <span class="font-medium text-slate-700 dark:text-slate-300" id="receiptStartDate">Oct 14, 2026</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-400">Valid To:</span>
+            <span class="font-medium text-slate-700 dark:text-slate-300" id="receiptEndDate">Nov 14, 2026</span>
+          </div>
+        </div>
+
+        <div class="mt-3 pt-2 border-t border-slate-200 dark:border-slate-700 text-[10px] text-slate-400 flex items-center justify-center gap-1">
+          <i data-lucide="shield-check" class="w-3 h-3 text-emerald-500"></i>
+          <span>Official Digital Verification</span>
+        </div>
+      </div>
+
+      <div class="mt-3 flex gap-2">
+        <button onclick="window.print()" class="flex-1 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 transition flex items-center justify-center gap-1.5">
+          <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+          <span>Print Slip</span>
+        </button>
+        <button onclick="copyReceiptText()" class="flex-1 py-2 rounded-xl text-xs font-semibold bg-indigo-600 text-white hover:bg-indigo-700 transition flex items-center justify-center gap-1.5 shadow-sm">
+          <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+          <span>Copy Info</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== TOAST NOTIFICATION CONTAINER ==================== -->
+  <div id="toastContainer" class="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- ==================== JAVASCRIPT APPLICATION LOGIC ==================== -->
+  <script>
+    // Storage Key
+    const STORAGE_KEY = 'library_seat_allocator_66834';
+
+    // Application State
+    let seats = [];
+    let currentFilter = 'all';
+    let searchQuery = '';
+    let selectedSeatId = null;
+    let isEditingOccupant = false;
+
+    // Shift Configurations
+    const SHIFTS = {
+      morning: {
+        label: 'Morning Shift',
+        hours: '08:00 AM - 02:00 PM',
+        colorClass: 'text-amber-700 bg-amber-100 dark:bg-amber-950/80 dark:text-amber-300 border-amber-300 dark:border-amber-800',
+        badgeBg: 'bg-amber-500',
+        pill: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300',
+        icon: 'sun'
+      },
+      evening: {
+        label: 'Evening Shift',
+        hours: '02:00 PM - 08:00 PM',
+        colorClass: 'text-purple-700 bg-purple-100 dark:bg-purple-950/80 dark:text-purple-300 border-purple-300 dark:border-purple-800',
+        badgeBg: 'bg-purple-500',
+        pill: 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300',
+        icon: 'moon'
+      },
+      fullday: {
+        label: 'Full Day Shift',
+        hours: '08:00 AM - 10:00 PM',
+        colorClass: 'text-blue-700 bg-blue-100 dark:bg-blue-950/80 dark:text-blue-300 border-blue-300 dark:border-blue-800',
+        badgeBg: 'bg-blue-500',
+        pill: 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300',
+        icon: 'clock'
+      }
+    };
+
+    // Pre-seeded Initial Dataset for Library 66834
+    const DEFAULT_SEATS = [
+      { id: '1', number: 'S-01', section: 'Main Reading Hall', hasPlug: true, isWindow: false, status: 'occupied', occupant: { name: 'Aarav Sharma', phone: '9876543210', shift: 'morning', startDate: '2026-10-01', endDate: '2026-11-01', rollNo: 'UPSC-24', notes: 'GS Paper 1 & 2 prep' } },
+      { id: '2', number: 'S-02', section: 'Main Reading Hall', hasPlug: true, isWindow: false, status: 'vacant', occupant: null },
+      { id: '3', number: 'S-03', section: 'Main Reading Hall', hasPlug: false, isWindow: true, status: 'occupied', occupant: { name: 'Priya Patel', phone: '9823456781', shift: 'fullday', startDate: '2026-09-15', endDate: '2026-11-15', rollNo: 'NEET-08', notes: 'Brings biology heavy texts' } },
+      { id: '4', number: 'S-04', section: 'Main Reading Hall', hasPlug: true, isWindow: true, status: 'occupied', occupant: { name: 'Rohan Verma', phone: '9711223344', shift: 'evening', startDate: '2026-10-05', endDate: '2026-11-05', rollNo: 'CAT-102', notes: 'Attends after office hours' } },
+      { id: '5', number: 'S-05', section: 'Main Reading Hall', hasPlug: true, isWindow: false, status: 'vacant', occupant: null },
+      { id: '6', number: 'S-06', section: 'Main Reading Hall', hasPlug: false, isWindow: false, status: 'vacant', occupant: null },
+      { id: '7', number: 'S-07', section: 'Silent Study Zone', hasPlug: true, isWindow: false, status: 'occupied', occupant: { name: 'Ananya Iyer', phone: '9988776655', shift: 'fullday', startDate: '2026-10-01', endDate: '2026-12-01', rollNo: 'CA-FINAL', notes: 'Quiet corner preferred' } },
+      { id: '8', number: 'S-08', section: 'Silent Study Zone', hasPlug: true, isWindow: false, status: 'occupied', occupant: { name: 'Vikram Sengupta', phone: '9845098450', shift: 'morning', startDate: '2026-10-10', endDate: '2026-11-10', rollNo: 'GATE-09', notes: 'Laptop daily' } },
+      { id: '9', number: 'S-09', section: 'Silent Study Zone', hasPlug: true, isWindow: true, status: 'vacant', occupant: null },
+      { id: '10', number: 'S-10', section: 'Silent Study Zone', hasPlug: true, isWindow: true, status: 'vacant', occupant: null },
+      { id: '11', number: 'S-11', section: 'AC Cubicle Section', hasPlug: true, isWindow: false, status: 'occupied', occupant: { name: 'Neha Deshmukh', phone: '9654321987', shift: 'evening', startDate: '2026-10-02', endDate: '2026-11-02', rollNo: 'JUD-44', notes: 'Law judiciary studies' } },
+      { id: '12', number: 'S-12', section: 'AC Cubicle Section', hasPlug: true, isWindow: false, status: 'occupied', occupant: { name: 'Karan Mehra', phone: '9765432109', shift: 'fullday', startDate: '2026-10-01', endDate: '2026-11-30', rollNo: 'SSC-CGL', notes: 'Paid 2 months advance' } },
+      { id: '13', number: 'S-13', section: 'AC Cubicle Section', hasPlug: true, isWindow: false, status: 'vacant', occupant: null },
+      { id: '14', number: 'S-14', section: 'AC Cubicle Section', hasPlug: true, isWindow: false, status: 'vacant', occupant: null },
+      { id: '15', number: 'S-15', section: 'First Floor Wing', hasPlug: true, isWindow: true, status: 'occupied', occupant: { name: 'Sneha Kulkarni', phone: '9911223344', shift: 'morning', startDate: '2026-10-08', endDate: '2026-11-08', rollNo: 'BANK-PO', notes: 'Morning batch' } },
+      { id: '16', number: 'S-16', section: 'First Floor Wing', hasPlug: false, isWindow: true, status: 'vacant', occupant: null },
+      { id: '17', number: 'S-17', section: 'First Floor Wing', hasPlug: true, isWindow: false, status: 'vacant', occupant: null },
+      { id: '18', number: 'S-18', section: 'First Floor Wing', hasPlug: true, isWindow: false, status: 'vacant', occupant: null },
+      { id: '19', number: 'S-19', section: 'Main Reading Hall', hasPlug: true, isWindow: false, status: 'occupied', occupant: { name: 'Devendra Yadav', phone: '9812345670', shift: 'evening', startDate: '2026-10-12', endDate: '2026-11-12', rollNo: 'CDS-99', notes: 'Defence exam' } },
+      { id: '20', number: 'S-20', section: 'Main Reading Hall', hasPlug: true, isWindow: false, status: 'vacant', occupant: null },
+      { id: '21', number: 'S-21', section: 'Main Reading Hall', hasPlug: false, isWindow: false, status: 'vacant', occupant: null },
+      { id: '22', number: 'S-22', section: 'Silent Study Zone', hasPlug: true, isWindow: false, status: 'vacant', occupant: null },
+      { id: '23', number: 'S-23', section: 'Silent Study Zone', hasPlug: true, isWindow: true, status: 'vacant', occupant: null },
+      { id: '24', number: 'S-24', section: 'AC Cubicle Section', hasPlug: true, isWindow: false, status: 'vacant', occupant: null },
+    ];
+
+    // Initialize App
+    window.addEventListener('DOMContentLoaded', () => {
+      loadSeats();
+      setupTheme();
+      renderStats();
+      renderSeats();
+      lucide.createIcons();
+
+      // Close menu when clicking outside
+      document.addEventListener('click', (e) => {
+        const menuBtn = document.getElementById('menuDropdownBtn');
+        const menuDropdown = document.getElementById('dataMenuDropdown');
+        if (menuDropdown && !menuBtn.contains(e.target) && !menuDropdown.contains(e.target)) {
+          menuDropdown.classList.add('hidden');
+        }
+      });
+
+      document.getElementById('menuDropdownBtn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        const menuDropdown = document.getElementById('dataMenuDropdown');
+        menuDropdown.classList.toggle('hidden');
+      });
+    });
+
+    // Theme Management
+    function setupTheme() {
+      const savedTheme = localStorage.getItem('library_theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      if (savedTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+        updateThemeIcon(true);
+      } else {
+        document.documentElement.classList.remove('dark');
+        updateThemeIcon(false);
+      }
+
+      document.getElementById('themeToggleBtn').addEventListener('click', () => {
+        const isDark = document.documentElement.classList.toggle('dark');
+        localStorage.setItem('library_theme', isDark ? 'dark' : 'light');
+        updateThemeIcon(isDark);
+      });
+    }
+
+    function updateThemeIcon(isDark) {
+      const icon = document.getElementById('themeIcon');
+      if (icon) {
+        icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+        lucide.createIcons();
+      }
+    }
+
+    // Load Seats from LocalStorage or Default
+    function loadSeats() {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        try {
+          seats = JSON.parse(stored);
+        } catch (e) {
+          console.error("Failed to parse seats from localStorage", e);
+          seats = JSON.parse(JSON.stringify(DEFAULT_SEATS));
+          saveSeats();
+        }
+      } else {
+        seats = JSON.parse(JSON.stringify(DEFAULT_SEATS));
+        saveSeats();
+      }
+    }
+
+    // Save Seats to LocalStorage
+    function saveSeats() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
+      renderStats();
+      renderSeats();
+    }
+
+    // Render Stats Strip & Filter Counts
+    function renderStats() {
+      const total = seats.length;
+      const occupied = seats.filter(s => s.status === 'occupied').length;
+      const available = total - occupied;
+      const percent = total > 0 ? Math.round((occupied / total) * 100) : 0;
+
+      const morningCount = seats.filter(s => s.status === 'occupied' && s.occupant?.shift === 'morning').length;
+      const eveningCount = seats.filter(s => s.status === 'occupied' && s.occupant?.shift === 'evening').length;
+      const fullDayCount = seats.filter(s => s.status === 'occupied' && s.occupant?.shift === 'fullday').length;
+
+      document.getElementById('statTotal').innerText = total;
+      document.getElementById('statAvailable').innerText = available;
+      document.getElementById('statOccupied').innerText = occupied;
+      document.getElementById('statPercent').innerText = `${percent}%`;
+      document.getElementById('statProgressBar').style.width = `${percent}%`;
+
+      document.getElementById('statMorningCount').innerText = morningCount;
+      document.getElementById('statEveningCount').innerText = eveningCount;
+      document.getElementById('statFullDayCount').innerText = fullDayCount;
+
+      document.getElementById('filterCountAll').innerText = total;
+      document.getElementById('filterCountAvailable').innerText = available;
+      document.getElementById('filterCountOccupied').innerText = occupied;
+      document.getElementById('filterCountMorning').innerText = morningCount;
+      document.getElementById('filterCountEvening').innerText = eveningCount;
+      document.getElementById('filterCountFullDay').innerText = fullDayCount;
+    }
+
+    // Search and Filter Handling
+    function handleSearchInput(e) {
+      searchQuery = e.target.value.trim().toLowerCase();
+      const clearBtn = document.getElementById('searchClearBtn');
+      if (searchQuery.length > 0) {
+        clearBtn.classList.remove('hidden');
+      } else {
+        clearBtn.classList.add('hidden');
+      }
+      renderSeats();
+    }
+
+    function clearSearch() {
+      document.getElementById('searchInput').value = '';
+      searchQuery = '';
+      document.getElementById('searchClearBtn').classList.add('hidden');
+      renderSeats();
+    }
+
+    function setFilter(filter) {
+      currentFilter = filter;
+      document.querySelectorAll('.filter-chip').forEach(btn => {
+        const btnFilter = btn.getAttribute('data-filter');
+        const checkIcon = btn.querySelector('.chip-check');
+
+        if (btnFilter === filter) {
+          btn.className = 'filter-chip px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 bg-indigo-600 text-white shadow-sm shadow-indigo-500/20 active:scale-95';
+          if (!checkIcon) {
+            const i = document.createElement('i');
+            i.setAttribute('data-lucide', 'check');
+            i.className = 'w-3 h-3 chip-check';
+            btn.prepend(i);
+          }
+        } else {
+          btn.className = 'filter-chip px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95';
+          if (checkIcon) {
+            checkIcon.remove();
+          }
+        }
+      });
+      lucide.createIcons();
+      renderSeats();
+    }
+
+    function clearSearchAndFilters() {
+      clearSearch();
+      setFilter('all');
+    }
+
+    // Render Seat Grid Cards
+    function renderSeats() {
+      const grid = document.getElementById('seatsGrid');
+      const emptyState = document.getElementById('emptyState');
+      const statusText = document.getElementById('gridStatusText');
+
+      // Filter seats based on currentFilter and searchQuery
+      const filtered = seats.filter(seat => {
+        // Filter condition
+        if (currentFilter === 'available' && seat.status !== 'vacant') return false;
+        if (currentFilter === 'occupied' && seat.status !== 'occupied') return false;
+        if (currentFilter === 'morning' && (seat.status !== 'occupied' || seat.occupant?.shift !== 'morning')) return false;
+        if (currentFilter === 'evening' && (seat.status !== 'occupied' || seat.occupant?.shift !== 'evening')) return false;
+        if (currentFilter === 'fullday' && (seat.status !== 'occupied' || seat.occupant?.shift !== 'fullday')) return false;
+
+        // Search condition
+        if (searchQuery) {
+          const seatNumMatch = seat.number.toLowerCase().includes(searchQuery);
+          const nameMatch = seat.occupant?.name?.toLowerCase().includes(searchQuery);
+          const phoneMatch = seat.occupant?.phone?.includes(searchQuery);
+          const rollMatch = seat.occupant?.rollNo?.toLowerCase().includes(searchQuery);
+          return seatNumMatch || nameMatch || phoneMatch || rollMatch;
+        }
+
+        return true;
+      });
+
+      // Update Meta Text
+      statusText.innerText = `Showing ${filtered.length} of ${seats.length} seats ${currentFilter !== 'all' ? `(${currentFilter})` : ''}`;
+
+      if (filtered.length === 0) {
+        grid.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        document.getElementById('emptyStateDesc').innerText = searchQuery
+          ? `No seats matching "${searchQuery}". Check the seat number or student name.`
+          : `No seats currently match the "${currentFilter}" filter.`;
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+
+      grid.innerHTML = filtered.map(seat => {
+        const isOccupied = seat.status === 'occupied';
+        const shiftInfo = isOccupied && seat.occupant?.shift ? SHIFTS[seat.occupant.shift] : null;
+
+        // Initial letters for avatar
+        const initials = isOccupied && seat.occupant?.name
+          ? seat.occupant.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
+          : '';
+
+        return `
+          <div
+            onclick="openSeatSheet('${seat.id}')"
+            class="group relative flex flex-col justify-between p-3.5 rounded-2xl border transition-all duration-150 cursor-pointer active:scale-[0.97] hover:shadow-md ${
+              isOccupied
+                ? 'bg-white dark:bg-slate-900 border-indigo-200/90 dark:border-indigo-900/60 hover:border-indigo-400'
+                : 'bg-white dark:bg-slate-900 border-dashed border-emerald-300 dark:border-emerald-800/80 hover:border-emerald-500 bg-emerald-50/20 dark:bg-emerald-950/10'
+            }"
+          >
+            <!-- Card Header: Seat Number & Status Badge -->
+            <div class="flex items-start justify-between gap-1">
+              <div class="flex items-center gap-1.5">
+                <span class="text-sm sm:text-base font-black tracking-tight ${isOccupied ? 'text-slate-900 dark:text-white' : 'text-slate-700 dark:text-slate-200'}">
+                  ${seat.number}
+                </span>
+                ${seat.hasPlug ? `<span title="Power Plug Available" class="text-slate-400 dark:text-slate-500"><i data-lucide="zap" class="w-3 h-3"></i></span>` : ''}
+                ${seat.isWindow ? `<span title="Window Side Seat" class="text-slate-400 dark:text-slate-500"><i data-lucide="sun-medium" class="w-3 h-3"></i></span>` : ''}
+              </div>
+
+              <!-- Status Pill Badge -->
+              ${
+                isOccupied
+                  ? `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${shiftInfo?.pill || 'bg-indigo-100 text-indigo-800'}">
+                      <span class="w-1.5 h-1.5 rounded-full ${shiftInfo?.badgeBg || 'bg-indigo-500'}"></span>
+                      ${shiftInfo ? shiftInfo.label.replace(' Shift', '') : 'Occupied'}
+                     </span>`
+                  : `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300">
+                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                      Available
+                     </span>`
+              }
+            </div>
+
+            <!-- Card Center: Occupant Details or Vacant Prompt -->
+            <div class="my-3">
+              ${
+                isOccupied
+                  ? `
+                    <div class="flex items-center gap-2">
+                      <div class="w-8 h-8 rounded-full ${shiftInfo?.badgeBg || 'bg-indigo-600'} text-white text-[11px] font-bold flex items-center justify-center shrink-0 shadow-xs">
+                        ${initials}
+                      </div>
+                      <div class="min-w-0">
+                        <div class="text-xs font-bold text-slate-900 dark:text-white truncate" title="${escapeHtml(seat.occupant.name)}">
+                          ${escapeHtml(seat.occupant.name)}
+                        </div>
+                        <div class="text-[10px] text-slate-500 dark:text-slate-400 truncate flex items-center gap-1">
+                          <i data-lucide="phone" class="w-2.5 h-2.5"></i>
+                          <span>${escapeHtml(seat.occupant.phone)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  `
+                  : `
+                    <div class="py-1 text-center">
+                      <div class="w-8 h-8 mx-auto rounded-full bg-emerald-100/70 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-1 group-hover:scale-110 transition-transform">
+                        <i data-lucide="user-plus" class="w-4 h-4"></i>
+                      </div>
+                      <div class="text-[11px] font-medium text-emerald-700 dark:text-emerald-400">Tap to Assign</div>
+                    </div>
+                  `
+              }
+            </div>
+
+            <!-- Card Footer: Room Section & Validity / Status Prompt -->
+            <div class="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[10px] text-slate-400">
+              <span class="truncate">${escapeHtml(seat.section || 'General')}</span>
+              ${
+                isOccupied && seat.occupant?.endDate
+                  ? `<span class="shrink-0 text-slate-500 dark:text-slate-400 font-mono">Till ${formatShortDate(seat.occupant.endDate)}</span>`
+                  : `<span class="shrink-0 text-emerald-600 dark:text-emerald-400 font-medium">Vacant</span>`
+              }
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      lucide.createIcons();
+    }
+
+    // ==================== SLIDE-UP BOTTOM SHEET LOGIC ====================
+    function openSeatSheet(seatId) {
+      selectedSeatId = seatId;
+      isEditingOccupant = false;
+      const seat = seats.find(s => s.id === seatId);
+      if (!seat) return;
+
+      const backdrop = document.getElementById('seatBottomSheetBackdrop');
+      const sheet = document.getElementById('seatBottomSheet');
+      const sheetTitle = document.getElementById('sheetSeatTitle');
+      const sheetStatusPill = document.getElementById('sheetStatusPill');
+      const sheetBadgeIcon = document.getElementById('sheetStatusBadgeIcon');
+      const sheetMeta = document.getElementById('sheetSeatMeta');
+
+      sheetTitle.innerText = `Seat ${seat.number}`;
+      sheetMeta.innerText = `${seat.section || 'General Hall'} • ${seat.hasPlug ? 'Power Plug' : 'No Plug'} • ${seat.isWindow ? 'Window Side' : 'Standard'}`;
+
+      if (seat.status === 'occupied') {
+        const shift = SHIFTS[seat.occupant?.shift] || SHIFTS.fullday;
+        sheetStatusPill.className = `px-2 py-0.5 rounded-full text-[11px] font-semibold ${shift.pill}`;
+        sheetStatusPill.innerText = `Occupied • ${shift.label}`;
+        sheetBadgeIcon.className = `w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-sm ${shift.pill}`;
+        sheetBadgeIcon.innerHTML = `<i data-lucide="user-check" class="w-5 h-5"></i>`;
+        renderOccupiedSheetContent(seat);
+      } else {
+        sheetStatusPill.className = `px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300`;
+        sheetStatusPill.innerText = 'Vacant • Ready for Allocation';
+        sheetBadgeIcon.className = `w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-sm bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300`;
+        sheetBadgeIcon.innerHTML = `<i data-lucide="user-plus" class="w-5 h-5"></i>`;
+        renderVacantSheetForm(seat);
+      }
+
+      backdrop.classList.remove('hidden');
+      requestAnimationFrame(() => {
+        backdrop.classList.remove('opacity-0');
+        sheet.classList.remove('translate-y-full');
+      });
+      lucide.createIcons();
+    }
+
+    function closeBottomSheet() {
+      const backdrop = document.getElementById('seatBottomSheetBackdrop');
+      const sheet = document.getElementById('seatBottomSheet');
+      backdrop.classList.add('opacity-0');
+      sheet.classList.add('translate-y-full');
+      setTimeout(() => {
+        backdrop.classList.add('hidden');
+        selectedSeatId = null;
+        isEditingOccupant = false;
+      }, 250);
+    }
+
+    // Render Vacant Form (or Edit Form) inside Bottom Sheet
+    function renderVacantSheetForm(seat, prefill = null) {
+      const today = new Date().toISOString().split('T')[0];
+      const oneMonthLater = new Date();
+      oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
+      const defaultEnd = oneMonthLater.toISOString().split('T')[0];
+
+      const initial = prefill || {
+        name: '',
+        phone: '',
+        shift: 'fullday',
+        startDate: today,
+        endDate: defaultEnd,
+        rollNo: '',
+        notes: ''
+      };
+
+      const container = document.getElementById('sheetBody');
+      container.innerHTML = `
+        <form onsubmit="handleAllocationSubmit(event)" class="space-y-3.5">
+          <div class="flex items-center justify-between pb-1">
+            <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider">
+              ${prefill ? 'Edit Occupant Information' : 'Student Allocation Details'}
+            </h4>
+            <span class="text-[11px] text-indigo-600 font-medium">Library Code 66834</span>
+          </div>
+
+          <!-- Full Name -->
+          <div>
+            <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Student Full Name *</label>
+            <input
+              type="text"
+              id="allocName"
+              required
+              value="${escapeHtml(initial.name)}"
+              placeholder="e.g. Rahul Sharma"
+              class="w-full px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+            >
+          </div>
+
+          <!-- Phone Number -->
+          <div>
+            <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Mobile / Phone Number *</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 text-xs">
+                <i data-lucide="phone" class="w-3.5 h-3.5"></i>
+              </span>
+              <input
+                type="tel"
+                id="allocPhone"
+                required
+                value="${escapeHtml(initial.phone)}"
+                placeholder="e.g. 9876543210"
+                class="w-full pl-9 pr-3.5 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+              >
+            </div>
+          </div>
+
+          <!-- Shift Selection Cards -->
+          <div>
+            <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">Shift Selection *</label>
+            <div class="grid grid-cols-3 gap-2">
+              <label class="flex flex-col p-2.5 rounded-xl border cursor-pointer transition text-center ${initial.shift === 'morning' ? 'border-amber-500 bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200' : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800'}">
+                <input type="radio" name="allocShift" value="morning" ${initial.shift === 'morning' ? 'checked' : ''} class="hidden" onchange="updateShiftSelectionUI()">
+                <div class="text-sm">☀️</div>
+                <div class="text-[11px] font-bold mt-1">Morning</div>
+                <div class="text-[9px] text-slate-400">8 AM - 2 PM</div>
+              </label>
+
+              <label class="flex flex-col p-2.5 rounded-xl border cursor-pointer transition text-center ${initial.shift === 'evening' ? 'border-purple-500 bg-purple-50 dark:bg-purple-950/40 text-purple-900 dark:text-purple-200' : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800'}">
+                <input type="radio" name="allocShift" value="evening" ${initial.shift === 'evening' ? 'checked' : ''} class="hidden" onchange="updateShiftSelectionUI()">
+                <div class="text-sm">🌙</div>
+                <div class="text-[11px] font-bold mt-1">Evening</div>
+                <div class="text-[9px] text-slate-400">2 PM - 8 PM</div>
+              </label>
+
+              <label class="flex flex-col p-2.5 rounded-xl border cursor-pointer transition text-center ${initial.shift === 'fullday' ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/40 text-blue-900 dark:text-blue-200' : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800'}">
+                <input type="radio" name="allocShift" value="fullday" ${initial.shift === 'fullday' ? 'checked' : ''} class="hidden" onchange="updateShiftSelectionUI()">
+                <div class="text-sm">⏱️</div>
+                <div class="text-[11px] font-bold mt-1">Full Day</div>
+                <div class="text-[9px] text-slate-400">8 AM - 10 PM</div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Date Range -->
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Start Date *</label>
+              <input
+                type="date"
+                id="allocStartDate"
+                required
+                value="${initial.startDate}"
+                class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+              >
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">End Date *</label>
+              <input
+                type="date"
+                id="allocEndDate"
+                required
+                value="${initial.endDate}"
+                class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+              >
+            </div>
+          </div>
+
+          <!-- Roll No & Notes -->
+          <div>
+            <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Exam / Roll No. / ID (Optional)</label>
+            <input
+              type="text"
+              id="allocRollNo"
+              value="${escapeHtml(initial.rollNo || '')}"
+              placeholder="e.g. UPSC-2026, CA-Final, NEET"
+              class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+            >
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Remarks / Notes</label>
+            <textarea
+              id="allocNotes"
+              rows="2"
+              placeholder="e.g. Fee status, locker assigned, preferred reading time..."
+              class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+            >${escapeHtml(initial.notes || '')}</textarea>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="pt-2 flex items-center justify-end gap-2.5">
+            <button
+              type="button"
+              onclick="${prefill ? `cancelEditOccupant('${seat.id}')` : 'closeBottomSheet()'}"
+              class="px-4 py-2 text-xs font-medium rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              class="px-5 py-2 text-xs font-semibold rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 shadow-md shadow-indigo-600/30 transition active:scale-95 flex items-center gap-1.5"
+            >
+              <i data-lucide="check" class="w-4 h-4"></i>
+              <span>${prefill ? 'Save Changes' : 'Confirm Allocation'}</span>
+            </button>
+          </div>
+        </form>
+      `;
+      lucide.createIcons();
+    }
+
+    function updateShiftSelectionUI() {
+      const selected = document.querySelector('input[name="allocShift"]:checked')?.value;
+      const labels = document.querySelectorAll('input[name="allocShift"]');
+      labels.forEach(radio => {
+        const parent = radio.closest('label');
+        if (radio.value === selected) {
+          if (radio.value === 'morning') parent.className = 'flex flex-col p-2.5 rounded-xl border border-amber-500 bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 cursor-pointer transition text-center';
+          if (radio.value === 'evening') parent.className = 'flex flex-col p-2.5 rounded-xl border border-purple-500 bg-purple-50 dark:bg-purple-950/40 text-purple-900 dark:text-purple-200 cursor-pointer transition text-center';
+          if (radio.value === 'fullday') parent.className = 'flex flex-col p-2.5 rounded-xl border border-blue-500 bg-blue-50 dark:bg-blue-950/40 text-blue-900 dark:text-blue-200 cursor-pointer transition text-center';
+        } else {
+          parent.className = 'flex flex-col p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 cursor-pointer transition text-center';
+        }
+      });
+    }
+
+    // Render Occupied Details View inside Bottom Sheet
+    function renderOccupiedSheetContent(seat) {
+      const occ = seat.occupant;
+      const shift = SHIFTS[occ.shift] || SHIFTS.fullday;
+      const daysLeft = calculateDaysRemaining(occ.endDate);
+
+      const container = document.getElementById('sheetBody');
+      container.innerHTML = `
+        <div class="space-y-4">
+          <!-- Occupant Profile Card -->
+          <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60">
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-2xl ${shift.badgeBg} text-white font-bold text-base flex items-center justify-center shadow-md">
+                  ${occ.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()}
+                </div>
+                <div>
+                  <h3 class="text-base font-bold text-slate-900 dark:text-white leading-tight">${escapeHtml(occ.name)}</h3>
+                  <div class="flex items-center gap-2 mt-0.5">
+                    <span class="inline-flex items-center gap-1 text-xs text-slate-600 dark:text-slate-300">
+                      <i data-lucide="phone" class="w-3 h-3 text-slate-400"></i>
+                      ${escapeHtml(occ.phone)}
+                    </span>
+                    ${occ.rollNo ? `<span class="text-[11px] px-1.5 py-0.2 rounded bg-slate-200 dark:bg-slate-700 font-mono text-slate-700 dark:text-slate-300">${escapeHtml(occ.rollNo)}</span>` : ''}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Call & WhatsApp quick click -->
+              <div class="flex items-center gap-1">
+                <a href="tel:${occ.phone}" title="Call student" class="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 flex items-center justify-center hover:bg-emerald-200 transition">
+                  <i data-lucide="phone-call" class="w-4 h-4"></i>
+                </a>
+              </div>
+            </div>
+
+            <!-- Shift & Validity Row -->
+            <div class="mt-4 pt-3 border-t border-slate-200/60 dark:border-slate-700/60 grid grid-cols-2 gap-2 text-xs">
+              <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
+                <div class="text-[10px] text-slate-400 uppercase font-semibold">Assigned Shift</div>
+                <div class="font-bold text-slate-800 dark:text-slate-200 mt-0.5">${shift.label}</div>
+                <div class="text-[10px] text-slate-500">${shift.hours}</div>
+              </div>
+
+              <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
+                <div class="text-[10px] text-slate-400 uppercase font-semibold">Seat Validity</div>
+                <div class="font-bold text-slate-800 dark:text-slate-200 mt-0.5">${formatDate(occ.endDate)}</div>
+                <div class="text-[10px] ${daysLeft < 3 ? 'text-rose-500 font-bold' : 'text-emerald-600 font-medium'}">
+                  ${daysLeft > 0 ? `${daysLeft} days remaining` : 'Subscription Expired'}
+                </div>
+              </div>
+            </div>
+
+            ${occ.notes ? `
+              <div class="mt-3 p-2.5 rounded-xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/50 dark:border-amber-900/40 text-xs text-amber-900 dark:text-amber-200">
+                <div class="text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase">Remarks</div>
+                <p class="mt-0.5 text-xs">${escapeHtml(occ.notes)}</p>
+              </div>
+            ` : ''}
+          </div>
+
+          <!-- Action Buttons Grid: Vacate, Transfer, Edit, Receipt -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <!-- Vacate Seat Button -->
+            <button
+              onclick="promptVacateSeat('${seat.id}')"
+              class="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-950/80 border border-rose-200 dark:border-rose-900/50 transition flex flex-col items-center justify-center gap-1 active:scale-95"
+            >
+              <i data-lucide="log-out" class="w-4 h-4 text-rose-600"></i>
+              <span class="text-xs font-semibold">Vacate Seat</span>
+            </button>
+
+            <!-- Transfer Seat Button -->
+            <button
+              onclick="openTransferModal('${seat.id}')"
+              class="p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-950/80 border border-indigo-200 dark:border-indigo-900/50 transition flex flex-col items-center justify-center gap-1 active:scale-95"
+            >
+              <i data-lucide="arrow-right-left" class="w-4 h-4 text-indigo-600"></i>
+              <span class="text-xs font-semibold">Transfer Seat</span>
+            </button>
+
+            <!-- Edit Info Button -->
+            <button
+              onclick="editOccupantInfo('${seat.id}')"
+              class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition flex flex-col items-center justify-center gap-1 active:scale-95"
+            >
+              <i data-lucide="edit-3" class="w-4 h-4 text-slate-600 dark:text-slate-300"></i>
+              <span class="text-xs font-semibold">Edit Info</span>
+            </button>
+
+            <!-- View Receipt Slip Button -->
+            <button
+              onclick="openReceiptModal('${seat.id}')"
+              class="p-2.5 rounded-xl bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 hover:bg-sky-100 dark:hover:bg-sky-950/80 border border-sky-200 dark:border-sky-900/50 transition flex flex-col items-center justify-center gap-1 active:scale-95"
+            >
+              <i data-lucide="receipt" class="w-4 h-4 text-sky-600"></i>
+              <span class="text-xs font-semibold">Slip Preview</span>
+            </button>
+          </div>
+        </div>
+      `;
+      lucide.createIcons();
+    }
+
+    // Edit Occupant Trigger
+    function editOccupantInfo(seatId) {
+      isEditingOccupant = true;
+      const seat = seats.find(s => s.id === seatId);
+      if (!seat || !seat.occupant) return;
+      renderVacantSheetForm(seat, seat.occupant);
+    }
+
+    function cancelEditOccupant(seatId) {
+      isEditingOccupant = false;
+      const seat = seats.find(s => s.id === seatId);
+      if (!seat) return;
+      renderOccupiedSheetContent(seat);
+    }
+
+    // Submit Allocation Form (Assign or Edit)
+    function handleAllocationSubmit(e) {
+      e.preventDefault();
+      if (!selectedSeatId) return;
+
+      const seatIndex = seats.findIndex(s => s.id === selectedSeatId);
+      if (seatIndex === -1) return;
+
+      const name = document.getElementById('allocName').value.trim();
+      const phone = document.getElementById('allocPhone').value.trim();
+      const shift = document.querySelector('input[name="allocShift"]:checked')?.value || 'fullday';
+      const startDate = document.getElementById('allocStartDate').value;
+      const endDate = document.getElementById('allocEndDate').value;
+      const rollNo = document.getElementById('allocRollNo').value.trim();
+      const notes = document.getElementById('allocNotes').value.trim();
+
+      if (!name || !phone) {
+        showToast('Please fill in required fields (Name & Phone)', 'error');
+        return;
+      }
+
+      seats[seatIndex].status = 'occupied';
+      seats[seatIndex].occupant = {
+        name,
+        phone,
+        shift,
+        startDate,
+        endDate,
+        rollNo,
+        notes
+      };
+
+      saveSeats();
+      showToast(`Seat ${seats[seatIndex].number} allocated to ${name}!`, 'success');
+      closeBottomSheet();
+    }
+
+    // Vacate Seat Logic
+    function promptVacateSeat(seatId) {
+      const seat = seats.find(s => s.id === seatId);
+      if (!seat) return;
+
+      const occupantName = seat.occupant?.name || 'Student';
+      if (confirm(`Are you sure you want to vacate Seat ${seat.number} assigned to ${occupantName}?`)) {
+        seat.status = 'vacant';
+        seat.occupant = null;
+        saveSeats();
+        showToast(`Seat ${seat.number} has been vacated and is now available.`, 'info');
+        closeBottomSheet();
+      }
+    }
+
+    // ==================== TRANSFER SEAT LOGIC ====================
+    let transferSourceSeatId = null;
+
+    function openTransferModal(sourceSeatId) {
+      transferSourceSeatId = sourceSeatId;
+      const sourceSeat = seats.find(s => s.id === sourceSeatId);
+      if (!sourceSeat || !sourceSeat.occupant) return;
+
+      const vacantSeats = seats.filter(s => s.status === 'vacant');
+      const select = document.getElementById('targetVacantSeatSelect');
+      const promptText = document.getElementById('transferPromptText');
+
+      promptText.innerText = `Transfer ${sourceSeat.occupant.name} from ${sourceSeat.number} to:`;
+
+      if (vacantSeats.length === 0) {
+        select.innerHTML = '<option value="">No vacant seats available</option>';
+        select.disabled = true;
+      } else {
+        select.disabled = false;
+        select.innerHTML = vacantSeats.map(s => `
+          <option value="${s.id}">Seat ${s.number} (${s.section || 'General'}${s.hasPlug ? ' • Plug' : ''})</option>
+        `).join('');
+      }
+
+      const modal = document.getElementById('transferModal');
+      modal.classList.remove('hidden');
+      requestAnimationFrame(() => modal.classList.remove('opacity-0'));
+    }
+
+    function closeTransferModal() {
+      const modal = document.getElementById('transferModal');
+      modal.classList.add('opacity-0');
+      setTimeout(() => {
+        modal.classList.add('hidden');
+        transferSourceSeatId = null;
+      }, 200);
+    }
+
+    function confirmSeatTransfer() {
+      const select = document.getElementById('targetVacantSeatSelect');
+      const targetId = select.value;
+      if (!targetId || !transferSourceSeatId) {
+        showToast('Please select a valid vacant seat.', 'error');
+        return;
+      }
+
+      const sourceSeat = seats.find(s => s.id === transferSourceSeatId);
+      const targetSeat = seats.find(s => s.id === targetId);
+
+      if (!sourceSeat || !targetSeat) return;
+
+      // Move occupant
+      targetSeat.status = 'occupied';
+      targetSeat.occupant = { ...sourceSeat.occupant };
+
+      sourceSeat.status = 'vacant';
+      sourceSeat.occupant = null;
+
+      saveSeats();
+      showToast(`Transferred ${targetSeat.occupant.name} from ${sourceSeat.number} to ${targetSeat.number}!`, 'success');
+      closeTransferModal();
+      closeBottomSheet();
+    }
+
+    // ==================== ALLOCATION RECEIPT SLIP MODAL ====================
+    function openReceiptModal(seatId) {
+      const seat = seats.find(s => s.id === seatId);
+      if (!seat || !seat.occupant) return;
+
+      const occ = seat.occupant;
+      const shift = SHIFTS[occ.shift] || SHIFTS.fullday;
+
+      document.getElementById('receiptSeatNum').innerText = `SEAT ${seat.number}`;
+      document.getElementById('receiptShift').innerText = `${shift.label} (${shift.hours})`;
+      document.getElementById('receiptStudent').innerText = occ.name;
+      document.getElementById('receiptPhone').innerText = occ.phone;
+      document.getElementById('receiptStartDate').innerText = formatDate(occ.startDate);
+      document.getElementById('receiptEndDate').innerText = formatDate(occ.endDate);
+
+      const modal = document.getElementById('receiptModal');
+      modal.classList.remove('hidden');
+      requestAnimationFrame(() => modal.classList.remove('opacity-0'));
+      lucide.createIcons();
+    }
+
+    function closeReceiptModal() {
+      const modal = document.getElementById('receiptModal');
+      modal.classList.add('opacity-0');
+      setTimeout(() => modal.classList.add('hidden'), 200);
+    }
+
+    function copyReceiptText() {
+      const seatNum = document.getElementById('receiptSeatNum').innerText;
+      const student = document.getElementById('receiptStudent').innerText;
+      const shift = document.getElementById('receiptShift').innerText;
+      const start = document.getElementById('receiptStartDate').innerText;
+      const end = document.getElementById('receiptEndDate').innerText;
+
+      const text = `LIBRARY SEAT ALLOCATION SLIP\nLibrary Code: 66834\n${seatNum}\nStudent: ${student}\nShift: ${shift}\nValid: ${start} to ${end}`;
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('Receipt details copied to clipboard!', 'success');
+      }).catch(() => {
+        showToast('Failed to copy text', 'error');
+      });
+    }
+
+    // ==================== ADD SEATS MODAL (SINGLE & BULK) ====================
+    function openAddSeatsModal() {
+      const modal = document.getElementById('addSeatsModal');
+      modal.classList.remove('hidden');
+      requestAnimationFrame(() => {
+        modal.classList.remove('opacity-0');
+        document.getElementById('addSeatsModalCard').classList.remove('scale-95');
+      });
+      updateBulkPreview();
+      lucide.createIcons();
+    }
+
+    function closeAddSeatsModal() {
+      const modal = document.getElementById('addSeatsModal');
+      modal.classList.add('opacity-0');
+      document.getElementById('addSeatsModalCard').classList.add('scale-95');
+      setTimeout(() => modal.classList.add('hidden'), 200);
+    }
+
+    function switchAddMode(mode) {
+      const singleTab = document.getElementById('tabBtnSingle');
+      const bulkTab = document.getElementById('tabBtnBulk');
+      const singleForm = document.getElementById('singleSeatForm');
+      const bulkForm = document.getElementById('bulkSeatForm');
+
+      if (mode === 'single') {
+        singleTab.className = 'flex-1 py-1.5 rounded-lg text-xs font-semibold bg-white dark:bg-slate-700 shadow-sm text-indigo-600 dark:text-white transition';
+        bulkTab.className = 'flex-1 py-1.5 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 transition';
+        singleForm.classList.remove('hidden');
+        bulkForm.classList.add('hidden');
+      } else {
+        bulkTab.className = 'flex-1 py-1.5 rounded-lg text-xs font-semibold bg-white dark:bg-slate-700 shadow-sm text-indigo-600 dark:text-white transition';
+        singleTab.className = 'flex-1 py-1.5 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 transition';
+        bulkForm.classList.remove('hidden');
+        singleForm.classList.add('hidden');
+      }
+    }
+
+    function handleSingleSeatSubmit(e) {
+      e.preventDefault();
+      const numInput = document.getElementById('singleSeatNumber').value.trim();
+      const section = document.getElementById('singleSeatSection').value;
+      const hasPlug = document.getElementById('singleSeatPlug').checked;
+      const isWindow = document.getElementById('singleSeatWindow').checked;
+
+      if (!numInput) return;
+
+      // Duplicate check
+      if (seats.some(s => s.number.toLowerCase() === numInput.toLowerCase())) {
+        showToast(`Seat ${numInput} already exists!`, 'error');
+        return;
+      }
+
+      const newSeat = {
+        id: Date.now().toString(),
+        number: numInput,
+        section,
+        hasPlug,
+        isWindow,
+        status: 'vacant',
+        occupant: null
+      };
+
+      seats.push(newSeat);
+      saveSeats();
+      showToast(`Seat ${numInput} created successfully!`, 'success');
+      closeAddSeatsModal();
+      document.getElementById('singleSeatForm').reset();
+    }
+
+    function updateBulkPreview() {
+      const prefix = document.getElementById('bulkPrefix').value;
+      const start = parseInt(document.getElementById('bulkStart').value, 10) || 1;
+      const end = parseInt(document.getElementById('bulkEnd').value, 10) || 1;
+      const count = Math.max(0, end - start + 1);
+
+      const previewText = document.getElementById('bulkPreviewText');
+      if (count <= 0) {
+        previewText.innerText = 'End number must be greater than or equal to Start number.';
+      } else if (count === 1) {
+        previewText.innerText = `Generates 1 seat: ${prefix}${formatNumberPadded(start)}`;
+      } else if (count <= 4) {
+        const nums = [];
+        for (let i = start; i <= end; i++) nums.push(`${prefix}${formatNumberPadded(i)}`);
+        previewText.innerText = `Generates ${count} seats: ${nums.join(', ')}`;
+      } else {
+        previewText.innerText = `Generates ${count} seats: ${prefix}${formatNumberPadded(start)}, ${prefix}${formatNumberPadded(start + 1)}, ..., ${prefix}${formatNumberPadded(end)}`;
+      }
+    }
+
+    function handleBulkSeatSubmit(e) {
+      e.preventDefault();
+      const prefix = document.getElementById('bulkPrefix').value;
+      const start = parseInt(document.getElementById('bulkStart').value, 10);
+      const end = parseInt(document.getElementById('bulkEnd').value, 10);
+      const section = document.getElementById('bulkSection').value;
+      const skipExisting = document.getElementById('bulkSkipExisting').checked;
+
+      if (isNaN(start) || isNaN(end) || start > end) {
+        showToast('Invalid number range for bulk generation.', 'error');
+        return;
+      }
+
+      let createdCount = 0;
+      let skippedCount = 0;
+
+      for (let i = start; i <= end; i++) {
+        const seatNum = `${prefix}${formatNumberPadded(i)}`;
+        const exists = seats.some(s => s.number.toLowerCase() === seatNum.toLowerCase());
+
+        if (exists) {
+          if (skipExisting) {
+            skippedCount++;
+            continue;
+          } else {
+            showToast(`Seat ${seatNum} already exists. Generation aborted.`, 'error');
+            return;
+          }
+        }
+
+        seats.push({
+          id: (Date.now() + i).toString(),
+          number: seatNum,
+          section,
+          hasPlug: true,
+          isWindow: false,
+          status: 'vacant',
+          occupant: null
+        });
+        createdCount++;
+      }
+
+      saveSeats();
+      showToast(`Bulk generation complete: ${createdCount} seats created${skippedCount > 0 ? ` (${skippedCount} skipped)` : ''}`, 'success');
+      closeAddSeatsModal();
+    }
+
+    // ==================== EXPORT & DATA ACTIONS ====================
+    function exportToCSV() {
+      document.getElementById('dataMenuDropdown').classList.add('hidden');
+
+      const headers = ['Library Code', 'Seat Number', 'Section', 'Status', 'Occupant Name', 'Phone', 'Shift', 'Start Date', 'End Date', 'Roll No / Exam', 'Notes'];
+      const rows = seats.map(s => {
+        const occ = s.occupant || {};
+        return [
+          '66834',
+          escapeCSV(s.number),
+          escapeCSV(s.section || ''),
+          s.status.toUpperCase(),
+          escapeCSV(occ.name || ''),
+          escapeCSV(occ.phone || ''),
+          escapeCSV(occ.shift ? (SHIFTS[occ.shift]?.label || occ.shift) : ''),
+          occ.startDate || '',
+          occ.endDate || '',
+          escapeCSV(occ.rollNo || ''),
+          escapeCSV(occ.notes || '')
+        ].join(',');
+      });
+
+      const csvContent = [headers.join(','), ...rows].join('\n');
+      const fileName = `library_66834_seat_allocation_${new Date().toISOString().split('T')[0]}.csv`;
+
+      if (window.AndroidBridge && window.AndroidBridge.shareContent) {
+        try {
+          window.AndroidBridge.shareContent(fileName, csvContent, 'text/csv');
+        } catch (e) {
+          console.warn('Native share fallback', e);
+        }
+      }
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', fileName);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      showToast('Exported Library 66834 Seat CSV successfully!', 'success');
+    }
+
+    function backupToJSON() {
+      document.getElementById('dataMenuDropdown').classList.add('hidden');
+
+      const data = {
+        libraryCode: '66834',
+        libraryName: 'Central Study Library',
+        exportedAt: new Date().toISOString(),
+        version: '1.0',
+        seats
+      };
+
+      const fileName = `library_66834_backup_${new Date().toISOString().split('T')[0]}.json`;
+      const jsonStr = JSON.stringify(data, null, 2);
+
+      if (window.AndroidBridge && window.AndroidBridge.shareContent) {
+        try {
+          window.AndroidBridge.shareContent(fileName, jsonStr, 'application/json');
+        } catch (e) {
+          console.warn('Native share fallback', e);
+        }
+      }
+
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', fileName);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      showToast('Database backup downloaded as JSON!', 'success');
+    }
+
+    function restoreFromJSON(event) {
+      document.getElementById('dataMenuDropdown').classList.add('hidden');
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          if (parsed && Array.isArray(parsed.seats)) {
+            seats = parsed.seats;
+            saveSeats();
+            showToast(`Restored ${seats.length} seats from backup!`, 'success');
+          } else if (Array.isArray(parsed)) {
+            seats = parsed;
+            saveSeats();
+            showToast(`Restored ${seats.length} seats!`, 'success');
+          } else {
+            showToast('Invalid backup file format.', 'error');
+          }
+        } catch (err) {
+          showToast('Failed to parse JSON backup file.', 'error');
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = '';
+    }
+
+    function resetToSampleData() {
+      document.getElementById('dataMenuDropdown').classList.add('hidden');
+      if (confirm('Are you sure you want to reset all seats to the original Library 66834 sample dataset?')) {
+        seats = JSON.parse(JSON.stringify(DEFAULT_SEATS));
+        saveSeats();
+        showToast('Library seats reset to sample dataset.', 'info');
+      }
+    }
+
+    // ==================== TOAST SYSTEM ====================
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+
+      const icons = {
+        success: 'check-circle-2',
+        error: 'alert-circle',
+        info: 'info'
+      };
+
+      const colors = {
+        success: 'bg-emerald-600 text-white',
+        error: 'bg-rose-600 text-white',
+        info: 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'
+      };
+
+      toast.className = `${colors[type] || colors.info} pointer-events-auto px-4 py-2.5 rounded-2xl shadow-xl flex items-center gap-2.5 text-xs font-semibold transform transition-all duration-300 translate-y-[-10px] opacity-0 max-w-sm`;
+      toast.innerHTML = `
+        <i data-lucide="${icons[type] || 'info'}" class="w-4 h-4 shrink-0"></i>
+        <span>${escapeHtml(message)}</span>
+      `;
+
+      container.appendChild(toast);
+      lucide.createIcons();
+
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-[-10px]', 'opacity-0');
+      });
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-[-10px]');
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    // ==================== UTILITY FUNCTIONS ====================
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function escapeCSV(str) {
+      if (str === null || str === undefined) return '""';
+      const s = String(str).replace(/"/g, '""');
+      return `"${s}"`;
+    }
+
+    function formatNumberPadded(num) {
+      return num < 10 ? `0${num}` : `${num}`;
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '';
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return dateStr;
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    function formatShortDate(dateStr) {
+      if (!dateStr) return '';
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return dateStr;
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+
+    function calculateDaysRemaining(endDateStr) {
+      if (!endDateStr) return 0;
+      const end = new Date(endDateStr);
+      const now = new Date();
+      now.setHours(0,0,0,0);
+      end.setHours(0,0,0,0);
+      const diffTime = end - now;
+      return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+{
+  "name": "Library Seats",
+  "description": "Library Seat Allocation System for Library Code 66834 featuring real-time occupancy statistics, shift-based assignment, interactive seat grid, bulk seat generation, and data export.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
